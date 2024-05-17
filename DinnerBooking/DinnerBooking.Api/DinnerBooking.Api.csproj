@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>83fa8547-bc21-41b6-b1b9-81abe2741d23</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DinnerBooking.Contracts\DinnerBooking.Contracts.csproj" />
+    <ProjectReference Include="..\DinnerBooking.Application\DinnerBooking.Application.csproj" />
+    <ProjectReference Include="..\DinnerBooking.Infrastructure\DinnerBooking.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
