@@ -205,3 +205,29 @@ A.  Now to overcome these problem, a different path we can follow , that *Result
 
 ### Break : 5 [Reference Link](https://www.youtube.com/watch?v=vBs6naPD6RE&list=PLzYkqgWkHPKBcDIP5gzLfASkQyTdy0t4k&index=7)
 
+*Object Mapping*
+
+1. We sometimes need to map some objects to similar like objects, we can do in some way :
+    - a.  **Manual Mapping**
+        - Where we do one property to another property of the other object.
+    - b. Using some known packages
+
+2. So here we are mapping some responses for client side, so we can use Mapster there, to do the job.
+    a. So first to add Mapster we need to add -->
+    ```cs
+    dotnet add .\DinnerBooking.Api\ package Mapster
+    dotnet add .\DinnerBooking.Api\ package Mapster.DependencyInjection
+    ```
+    b. Now accordingly updating with Mapster wherever did manual mapping.
+    c. While mapping , we can see authResult is trying to be mapped to Authentication response , but both doesn't have same properties except token. So , we need to configure those mapping correctly, to do this we can create all configurations we needed.
+    d. In those particular configs we need to implement **IRegister** interface from Mapster.
+    e. As this will also have it's dependency , so also have to add those dependencies.
+        - So added dependencies and all global configurations like this 
+        First getting all configurations from the executing assembly then registering those and as well as the mapping service .
+    f. Also moved all the presentation layer dependencies to its own dependencies and just added presentation dependency to the program.cs file.
+    g. Though the register request and register command are same as like for login, still we have added to those mapping, if later any thing we need to update we can go in the mapping just and can do the required.
+
+
+### Break : 5 [Reference Link](https://www.youtube.com/watch?v=FXP3PQ03fa0&list=PLzYkqgWkHPKBcDIP5gzLfASkQyTdy0t4k&index=8)
+
+*Validation Behavior*
