@@ -10,15 +10,15 @@ namespace DinnerBooking.Api.Common.Errors;
 public class DinnerBookingProblemDetailsFactory : ProblemDetailsFactory
 {
     private readonly ApiBehaviorOptions _options;
-    // private readonly Action<ProblemDetailsContext>? _configure;
+    private readonly Action<ProblemDetailsContext>? _configure;
 
     public DinnerBookingProblemDetailsFactory(
         IOptions<ApiBehaviorOptions> options
-    // IOptions<ProblemDetailsOptions>? problemDetailsoptions = null
+    , IOptions<ProblemDetailsOptions>? problemDetailsOptions = null
     )
     {
         _options = options.Value ?? throw new ArgumentNullException(nameof(options));
-        // _configure = problemDetailsoptions?.Value?.CustomizeProblemDetails;
+        _configure = problemDetailsOptions?.Value?.CustomizeProblemDetails;
     }
 
     public override ProblemDetails CreateProblemDetails(HttpContext httpContext, int? statusCode = null, string? title = null, string? type = null, string? detail = null, string? instance = null)
@@ -86,7 +86,21 @@ public class DinnerBookingProblemDetailsFactory : ProblemDetailsFactory
 
         if (errors is not null)
         {
-            problemDetails.Extensions.Add("errorsCodes", errors.Select(e => e.Code));
+            var errorDictionary = new Dictionary<string, List<string>>();
+
+            foreach (var error in errors)
+            {
+                if (errorDictionary.ContainsKey(error.Code))
+                {
+                    errorDictionary[error.Code].Add(error.Description);
+                }
+                else
+                {
+                    errorDictionary.Add(error.Code, new List<string> { error.Description });
+                }
+            }
+
+            problemDetails.Extensions.Add(HttpContextItemKeys.Errors, errorDictionary);
         }
 
         // _configure?.Invoke(new() { HttpContext = httpContext!, ProblemDetails = problemDetails });

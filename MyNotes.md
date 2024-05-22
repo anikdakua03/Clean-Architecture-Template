@@ -231,3 +231,139 @@ A.  Now to overcome these problem, a different path we can follow , that *Result
 ### Break : 5 [Reference Link](https://www.youtube.com/watch?v=FXP3PQ03fa0&list=PLzYkqgWkHPKBcDIP5gzLfASkQyTdy0t4k&index=8)
 
 *Validation Behavior*
+
+1. This validation is a request comes it goes to the MediatR query/command handler. So while before interacting with real database , it should be validated. To do this we can use one of feature of MediatR is **Validation Pipeline**.
+2. Then create particular class for validation inheriting and implementing like :
+    ```cs
+    public class ValidateRegisterCommandBehavior : IPipelineBehavior<RegisterCommand, AuthenticationResult>
+    {
+        public Task<AuthenticationResult> Handle(RegisterCommand request, RequestHandlerDelegate<AuthenticationResult> next, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    ```
+3. Also add this to the DI.
+4. Now for validation we can use "FluentValidation" package.
+    ```cs
+    dotnet add .\DinnerBooking.Application\ package FluentValidation
+    ```
+5. As we are keeping files organized and to its proper location , so for validation we also create its own class with those handlers and like this --
+    ```cs
+    public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
+    {
+        public RegisterCommandValidator()
+        {
+            RuleFor(x => x.FirstName).NotEmpty();
+            RuleFor(x => x.LastName).NotEmpty();
+            RuleFor(x => x.Email).NotEmpty();
+            RuleFor(x => x.Password).NotEmpty();
+        }
+    }
+    ```
+    and also add them to the DI also.
+    - Now there can be many validations like this , so adding them one by one may not be feasible , so we can use its **FluentValidation.AspNetCore** package.
+        ```cs
+        dotnet add .\DinnerBooking.Application\ package FluentValidation.AspNetCore
+        ```
+    
+6. Now , there also can be many commands or queries , so making each can be challenging, so we converted our **ValidateRegisterCommandBehavior** to **ValidationBehavior** which will be a generic type.
+Like :
+```cs
+public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> 
+    where TRequest : IRequest<TResponse>
+    where TResponse : IErrorOr
+{
+    private readonly IValidator<TRequest>? _validator;
+
+    public ValidationBehavior(IValidator<TRequest>? validator)
+    {
+        _validator = validator;
+    }
+
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    {
+        // implement as wanted
+    }
+}
+```
+> Use of **dynamic** keyword :  using dynamic to convert List of Error to TResponse type , we intentionally used this for conversion as there no such still exists and also we are sure of tha we will only get List of errors for converting to TResponse type
+
+and add in DI like --
+```cs
+services.AddScoped(
+    typeof(IPipelineBehavior<,>),
+    typeof(ValidationBehavior<,>)
+);
+```
+
+7. Now we are customizing how we want to show the validation errors, so to do that we need to modify how we are previously creating our problems. So in our **ApiController** we can filter the validation errors and create ValidationProblem from the errors.
+
+> NOTE : Because of updated **MediatR** package , now we no longer needed to add **MediatR.Extensions.Microsoft.DependencyInjection**, so removed that.
+
+```cs
+dotnet remove .\DinnerBooking.Application\ package MediatR.Extensions.Microsoft.DependencyInjection
+```
+
+8. **So after more than one or more days , could not find why I am getting error response like**
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {},
+  "traceId": "00-9c31e32999bbeb8ecfa7919c2dc3e626-31370a1c2e1ebaa1-00",
+  "errorsCodes": [
+    "FirstName",
+    "LastName",
+    "Email"
+  ]
+}
+```
+- From where it is getting **errors** and also it is empty , but getting only **errorCodes**.
+- The response should be like :
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "traceId": "00-9c31e32999bbeb8ecfa7919c2dc3e626-31370a1c2e1ebaa1-00",
+  "errors": {
+    "FirstName" : [
+        "'FirstName' must not be empty."
+    ],
+    "LastName" : [
+        "'LastName' must not be empty."
+    ],
+    "Email" : [
+        "'Email' is not a valid email address."
+    ]
+  }
+}
+```
+[That Time Ref](https://youtu.be/FXP3PQ03fa0?list=PLzYkqgWkHPKBcDIP5gzLfASkQyTdy0t4k&t=1171)
+
+>> After some debugging / repeatation of this, tried to modify **DinnerBookingProblemDetailsFactory** implementation . But still not getting as expected as after following the same. Not understanding from where that "errors" is coming , if coming why it is not getting assigned those errors.
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {},
+  "traceId": "00-584d3f7a74b52cdcbc5f1db1933b12cc-9e3e395c2c55a66c-00",
+  "errors": {
+    "FirstName": [
+      "'First Name' must not be empty.",
+      "The length of 'First Name' must be at least 4 characters. You entered 0 characters."
+    ],
+    "LastName": [
+      "'Last Name' must not be empty.",
+      "The length of 'Last Name' must be at least 4 characters. You entered 0 characters."
+    ],
+    "Email": [
+      "'Email' is not a valid email address."
+    ]
+  }
+}
+```
