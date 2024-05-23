@@ -1,0 +1,4 @@
+@host = http://localhost:5014
+
+GET  {{host}}/dinners
+Authorization: Bearer <TOKEN_HERE>

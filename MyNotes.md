@@ -367,3 +367,24 @@ dotnet remove .\DinnerBooking.Application\ package MediatR.Extensions.Microsoft.
   }
 }
 ```
+
+
+### Break : 6 [Reference Link](https://www.youtube.com/watch?v=7ILCRfPmQxQ&list=PLzYkqgWkHPKBcDIP5gzLfASkQyTdy0t4k&index=9)
+
+**JWT Bearer Authentication**
+
+1. So now adding our controllers which gives/does something with resources. and inherits from our ApiController.
+2. So now to use authentication for our applications , this needs to be a part of the application pipeline , so once request comes , it should go first through the authentication layer, for to add --
+    ```cs
+    app.UseAuthentication();
+    ```
+3. Now also in our infrastructure folder where we added our auth related services , we can organize them and add more authentication configuration there.
+4. Now there while adding authentication configuaration , and there we need to specify which Auth.... scheme we will be using, in this case we will be JwtBearer , so for that we need need to install **Microsoft.AspNetCore.Authentication.JwtBearer** .
+    ```cs
+    dotnet add .\DinnerBooking.Infrastructure\ package Microsoft.AspNetCore.Authentication.JwtBearer
+    ```
+5. After all done now to use this authentication we need to use Authorization middleware which does checking if a user can access the requested resource or not after the user gets authenticated. So this needs to add just below the authentication.
+6. Now to protect our particular routes , we need also to add Authorize attribute.
+7. Also we can move this to the base controller level to protect all our controllers and for those we don't want it to be protected , we will use **AllowAnonymous** attribute.
+> We also can use these attributes as method level as well.
+
